@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+  <link rel="stylesheet" href="style.css">
+  <script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous"></script>
+  <script src="jquery.zoom.min.js"></script>
+</head>
+<body>
+
+  <div class="calc-wrp" id="client">
+    <div class="calc-top-div">
+      <div class="calc-choise-div">
+        <!--  Кнопки Комнаты  -->
+        <div class="calc-subtitle">Кол-во комнат</div>
+        <div class="calc-rooms-div">
+          <template v-for="(room, index) in rooms">
+            <a href="#" @click="selectRoom(index)" :class="'calc-rooms ' + (index === selectRoomIndex ? 'active' : '')">{{room.room}}-х комнатные
+            </a>
+          </template>
+        </div>
+        <!--  Кнопки Площади  -->
+        <div class="calc-subtitle">Площадь</div>
+        <div class="calc-meters-div" v-if="selectedRoom">
+          <template v-for="(square, index) in selectedRoom">
+            <a href="#" @click="selectSquare(index)" :class="'calc-meters ' + (index === selectSquareIndex ? 'active' : '')">{{square.square}} м²
+            </a>
+          </template>
+        </div>
+      </div>
+      <!--  Картинки  -->
+      <div class="calc-img-div">
+        <img @click="openedModal" :src="`https://offersapi.bi.group/img/${selectedSquare.img}`+'.png'" alt="" class="calc-img">
+        <button id="show-modal" @click="openedModal" class="btn-broun-left-icon mob-hidden w-button zoom-icon button-icon-on-dark">Увеличить</button>
+       <modal v-if="showModal" @close="openedModal">
+          <p>text</p>
+          <h3 slot="header"></h3>
+          <div slot="body">
+            <span class='zoom' id='ex2'>
+              <img :src="`https://offersapi.bi.group/img/${selectedSquare.img}`+'.png'" alt="" class="calc-img img1">
+            </span>
+            <span class='zoom' id='ex1'>
+              <img :src="`https://offersapi.bi.group/img/${selectedSquare.img}`+'.png'" alt="" class="calc-img img2">
+            </span>
+          </div>
+        </modal>
+      </div>
+    </div>
+    <div class="calc-cost-div">
+      <div class="calc-parameters-div" v-if="selectedSquare">
+        <div class="calc-decor-div">
+          <div class="calc-decor-div1">
+            <div class="calc-result-rooms">{{selectRoomIndex + 2}}-х комнатная</div>
+            <div class="calc-result-div">
+              <div class="calc-result-block meters-block">
+                <div class="calc-result">{{selectedSquare.square}} м²</div>
+                <div class="calc-result-note">площадь</div>
+              </div>
+              <div class="calc-result-decor-line"></div>
+              <div class="calc-result-block queue-block">
+                <div class="calc-result">{{selectedSquare.queue}}</div>
+                <div class="calc-result-note">очередь</div>
+              </div>
+              <div class="calc-result-decor-line"></div>
+              <div class="calc-result-block floor-block">
+                <div class="calc-result">{{selectedSquare.deadLineYear}}/{{selectedSquare.deadLineQuarter}} квартал</div>
+                <div class="calc-result-note">дата сдачи</div>
+              </div>
+              <div class="calc-decor-div2"></div>
+            </div>
+          </div>
+          <div class="calc-decor-div3">
+            <div class="calc-subtitle">стоимость</div>
+            <div class="tabs-result-price-div">
+              <div>от&nbsp;</div>
+              <div class="calc-result-price">{{(selectedSquare.price).toLocaleString('ru')}}</div>
+              <div>тг*</div>
+            </div>
+            <div class="tabs-result-cost-div">
+              <div>от&nbsp;</div>
+              <div class="calc-result-cost">{{(selectedSquare.priceM).toLocaleString('ru')}}</div>
+              <div>тг за м
+                <pre class="font-family-m2">²</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="calc-result-bottom-text-wrap">
+          <p class="calc-result-bottom-text">На планировке проекта указана проектная площадь.</p>
+          <p class="calc-result-bottom-text">Расчет осуществляется по фактической площади.</p>
+          <p class="calc-result-bottom-text calc-result-bottom-text--bot"> *Стоимость может измениться.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+<script>
+  Vue.component("modal", {
+    template: "#modal-template"
+  });
+new Vue({
+  el: '#client',
+  data: {
+    types2: [
+      'Light',
+              'Flowers'
+          ],
+    rooms: [],
+          type2: 'Light',
+    selectRoomIndex: 0,
+    selectedRoom: null,
+    selectSquareIndex: 0,
+    selectedSquare: null,
+    showModal: false,
+  },
+  watch: {
+    type2: function () {
+      this.onLoad()
+        }
+  },
+  created: function () {
+    this.onLoad()
+  },
+  methods: {
+    openedModal() {
+      if(this.showModal == false) {
+        this.showModal = true;
+        $(".scroll-down").css('zIndex', '10');
+        $(document).ready(function(){
+          if( window.innerWidth >= 922 ){
+            $('#ex1').css("display", 'none');
+            $('#ex2').css("display", 'block');
+            $('#ex2').zoom();
+            $('#ex2').hover(
+              function(){
+                $(".img1").css('opacity', '0');
+              },
+              function(){
+                $(".img1").css('opacity', '1');
+              }
+            );
+          } else {
+            $('#ex2').css("display", 'none');
+            $('#ex1').css("display", 'block');
+            $('#ex1').zoom({ on:'grab' });
+            $('#ex1').on("touchmove", function(e) {
+              $(".img2").css('opacity', '0');
+            });
+            $('#ex1').on("touchend", function(e) {
+              $(".img2").css('opacity', '1');
+            });        
+          } 
+        });
+      } else {
+        $(".scroll-down").css('zIndex', '16');
+        this.showModal = false;
+      }
+    },
+    onLoad: function () {
+      this.selectRoomIndex = 0
+      this.selectSquareIndex = 0
+      let self = this;
+      axios.get('https://offersapi.bi.group/groups/d6614b82-2588-11eb-a837-00155d101d74').then(function (response) {
+      const dataFromBack = response.data;
+      console.log("dataFromBack:");
+      console.log(dataFromBack);
+      console.log("response.data");
+      console.log(response.data);
+      let newData = [];
+      for(let i = 0; i < dataFromBack.length; i++) {
+        for(let j = 0; j < dataFromBack[i].squares.length; j++) {
+          if(dataFromBack[i].squares[j].queue == "Дом на Ботаническом - 1") {
+            newData.push(dataFromBack[i]);
+            j = dataFromBack[i].squares.length;
+          }
+        }
+      }
+      let newDataFiltered = newData.slice();
+      for(let i = 0; i < newDataFiltered.length; i++) {
+       for(let j = 0; j < newDataFiltered[i].squares.length; j++) {
+          let filterSquares;
+          filterSquares = newDataFiltered[i].squares.filter(squares => squares.queue == "Дом на Ботаническом - 1");
+          newDataFiltered[i].squares = [];
+          newDataFiltered[i].squares = filterSquares;
+        }
+      }
+        self.rooms = newDataFiltered;
+        self.selectedRoom = newDataFiltered[0].squares;
+        self.selectedSquare = newDataFiltered[0].squares[0];
+      }).catch(function (error) {
+      });
+    },
+    selectRoom(room) {
+      this.selectRoomIndex = room
+      this.selectedRoom = this.rooms[room].squares
+      this.selectSquareIndex = 0
+      this.selectedSquare = this.rooms[room].squares[0]
+    },
+    selectSquare(square) {
+      this.selectSquareIndex = square
+      this.selectedSquare = this.selectedRoom[square]
+    }
+  }
+});
+</script>
+<script type="text/x-template" id="modal-template">
+<transition name="modal">
+  <div class="modal-mask">
+    <div class="modal-wrapper">
+      <div class="modal-container">
+        <div class="modal-header">
+          <slot name="header">
+            <!-- default header -->
+          </slot>
+        </div>
+        <div class="modal-body">
+          <slot name="body">
+            <!-- default body -->
+          </slot>
+        </div>
+        <div class="modal-footer">
+          <slot name="footer">
+            <!-- <p class="modal-footer__text txt-opacity">Зажмите, чтобы увеличить</p> -->
+            &nbsp;
+            <button class="modal-default-button" @click="$emit('close')">
+            </button>
+          </slot>
+        </div>
+      </div>
+    </div>
+  </div>
+</transition>
+</script>
+
+</body>
+</html>
